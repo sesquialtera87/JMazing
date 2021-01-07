@@ -1,143 +1,106 @@
-package mth.jmazex.algo
+package mth.maze.algo
 
-import mth.jmazex.algo.MazeGenerator.Companion.DX
-import mth.jmazex.algo.MazeGenerator.Companion.DY
-import mth.jmazex.algo.MazeGenerator.Companion.opposite
-import mth.jmazex.algo.RecursiveBacktracking.Neighbor
-import mth.jmazex.app.Maze
-import mth.jmazex.app.Point
-import java.lang.System.currentTimeMillis
-import javax.swing.SwingConstants.*
 
-fun main() {
-    val mg = HuntAndKill()
-    val maze = Maze(0, 0)
-    val times = ArrayList<Double>(50)
-    val repeatedMeasures = ArrayList<Long>(21)
+import mth.maze.Maze
+import mth.maze.Maze.Companion.EAST
+import mth.maze.Maze.Companion.NORTH
+import mth.maze.Maze.Companion.SOUTH
+import mth.maze.Maze.Companion.WEST
+import mth.maze.MazeRegion
+import mth.maze.algo.MazeGenerator.Companion.DX
+import mth.maze.algo.MazeGenerator.Companion.DY
+import mth.maze.component1
+import mth.maze.component2
+import java.awt.Point
 
-    (5..50).forEach { dim ->
-        for (i in 1..20) {
-            maze.rebuild(dim, dim, true)
-            var time = currentTimeMillis()
-            mg.generate(0, 0, dim, dim, maze)
-            time = currentTimeMillis() - time
-            repeatedMeasures.add(time)
-        }
-
-        times.add(repeatedMeasures.average())
-        repeatedMeasures.clear()
-    }
-
-    (5..50).forEachIndexed { index, dim -> println("$dim -> ${times[index]}") }
-}
 
 class HuntAndKill : MazeGenerator {
 
     private val VISITED = "visited"
     private var visitedCounter = 0
-    private lateinit var maze: Maze
-    private var width = 0
-    private var height = 0
-
-    private var xStart = 0
-    private var yStart = 0
-
-    fun isSelectionGeneration(xStart: Int, yStart: Int, width: Int, height: Int, maze: Maze) =
-        !(xStart == 0 && yStart == 0 && width == maze.nx && height == maze.ny)
 
 
-    override fun generate(xStart: Int, yStart: Int, width: Int, height: Int, maze: Maze): Maze {
+    override fun generate(mazeRegion: MazeRegion, maze: Maze): Maze {
         // mark all cells as not visited
-        for (x in 0 until width)
-            for (y in 0 until height) {
-                maze.cellAt(x + xStart, y + yStart)[VISITED] = false
-
-                if (isSelectionGeneration(xStart, yStart, width, height, maze))
-                    rebuildWalls(maze, x, y, Point(xStart, yStart), Point(width, height))
+        for (x in 0 until mazeRegion.width)
+            for (y in 0 until mazeRegion.height) {
+                maze.cellAt(x + mazeRegion.x, y + mazeRegion.y)[VISITED] = false
             }
 
         this.visitedCounter = 0
-        this.width = width
-        this.height = height
-        this.maze = maze
-        this.xStart = xStart
-        this.yStart = yStart
 
-        var walkStart = Point(xStart + random.nextInt(width), yStart + random.nextInt(height))
+        var walkStart =
+            Point(mazeRegion.x + random.nextInt(mazeRegion.width), mazeRegion.y + random.nextInt(mazeRegion.height))
 
-        while (visitedCounter < width * height) {
-            randomWalk(walkStart.first, walkStart.second)
-            val neighbor = hunting()
+        while (visitedCounter < mazeRegion.width * mazeRegion.height) {
+            randomWalk(walkStart.x, walkStart.y, mazeRegion, maze)
+            val neighbor = hunting(mazeRegion, maze)
 
             if (neighbor == null) {
                 break
             } else
-                walkStart = Point(neighbor.first, neighbor.second)
+                walkStart = Point(neighbor.x, neighbor.y)
         }
 
         return maze
     }
 
-    private fun hunting(): Point? {
-        for (x in 0 until width)
-            for (y in 0 until height) {
-                if (maze.cellAt(x + xStart, y + yStart)[VISITED] == false) {
-                    // search for visited neighborhoods
-                    val directions = getAvailableDirections(x + xStart, y + yStart, false)
+    private fun hunting(region: MazeRegion, maze: Maze): Point? {
+        with(region) {
+            for (i in 0 until width)
+                for (j in 0 until height) {
+                    val X = i + x
+                    val Y = j + y
 
-                    if (directions.isNotEmpty()) {
-                        carvePassage(x + xStart, y + yStart, directions[0])
-                        return Point(x + xStart, y + yStart)
+                    if (maze.cellAt(X, Y)[VISITED] == false) {
+                        // search for visited neighborhoods
+                        val directions = getAvailableDirections(X, Y, region, maze, false)
+
+                        if (directions.isNotEmpty()) {
+                            carvePassage(X, Y, directions[0], maze)
+                            return Point(X, Y)
+                        }
                     }
                 }
-            }
+        }
 
         return null
     }
 
     /**
-     * Opens a passage from the cell (x,y) to the cell specified by [direction]
-     */
-    private fun carvePassage(x: Int, y: Int, direction: Int): Point {
-        val destinationX = x + DX[direction]!!
-        val destinationY = y + DY[direction]!!
-
-        maze.cellAt(x, y).walls[direction] = false
-        maze.cellAt(destinationX, destinationY).walls[opposite.getValue(direction)] = false
-
-        return Point(destinationX, destinationY)
-    }
-
-    /**
-     * Search for the available moves around the cell identified by the absolute coordinates [x] and [y]
-     * @param x The absolute horizontal coordinate of the cell
-     * @param y The absolute vertical coordinate of the cell
+     * Search for the available moves around the cell identified by the absolute coordinates [X] and [Y]
+     * @param X The absolute horizontal coordinate of the cell
+     * @param Y The absolute vertical coordinate of the cell
      * @param searchForNeighborsUnvisited A flag indicating the search goal
      */
     private fun getAvailableDirections(
-        x: Int,
-        y: Int,
+        X: Int,
+        Y: Int,
+        region: MazeRegion,
+        maze: Maze,
         searchForNeighborsUnvisited: Boolean = true
     ): List<Int> {
         val directionsAllowed = mutableSetOf(NORTH, SOUTH, EAST, WEST)
         val directions = mutableListOf<Int>()
 
-        if (x - xStart == 0)
-            directionsAllowed.remove(WEST)
-        if (y - yStart == 0)
-            directionsAllowed.remove(NORTH)
-        if (x - xStart == width - 1)
-            directionsAllowed.remove(EAST)
-        if (y - yStart == height - 1)
-            directionsAllowed.remove(SOUTH)
+        with(region) {
+            if (X - x == 0)
+                directionsAllowed.remove(WEST)
+            if (Y - y == 0)
+                directionsAllowed.remove(NORTH)
+            if (X - x == width - 1)
+                directionsAllowed.remove(EAST)
+            if (Y - y == height - 1)
+                directionsAllowed.remove(SOUTH)
 
-        directionsAllowed.forEach {
-            val visited = maze.cellAt(x + DX[it]!!, y + DY[it]!!)[VISITED] == true
+            directionsAllowed.forEach {
+                println(maze.cellAt(X + DX[it]!!, Y + DY[it]!!)[VISITED])
+                val visited = maze.cellAt(X + DX[it]!!, Y + DY[it]!!)[VISITED] == true
 
-            if (!visited == searchForNeighborsUnvisited)
-                directions.add(it)
+                if (!visited == searchForNeighborsUnvisited)
+                    directions.add(it)
+            }
         }
-
         return directions
     }
 
@@ -146,16 +109,16 @@ class HuntAndKill : MazeGenerator {
      * Make a random walk, beginning from the absolute coordinates [fromX] e [fromY] until it reach a
      * dead end
      */
-    private fun randomWalk(fromX: Int, fromY: Int) {
+    private fun randomWalk(fromX: Int, fromY: Int, region: MazeRegion, maze: Maze) {
         var currentX = fromX
         var currentY = fromY
-        var directions = getAvailableDirections(fromX, fromY)
+        var directions = getAvailableDirections(fromX, fromY, region, maze)
         maze.cellAt(fromX, fromY)[VISITED] = true
         visitedCounter++
 
         while (directions.isNotEmpty()) {
             val direction = directions[random.nextInt(directions.size)]
-            val (x, y) = carvePassage(currentX, currentY, direction)
+            val (x, y) = carvePassage(currentX, currentY, direction, maze)
 
             maze.cellAt(x, y)[VISITED] = true
             visitedCounter++
@@ -163,7 +126,12 @@ class HuntAndKill : MazeGenerator {
             currentX = x
             currentY = y
 
-            directions = getAvailableDirections(x, y)
+            directions = getAvailableDirections(x, y, region, maze)
         }
     }
 }
+
+
+
+
+
