@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema elementFormDefault="qualified"
+           xmlns:xs="http://www.w3.org/2001/XMLSchema">
+
+    <xs:element name="maze" type="mazeType"/>
+
+    <xs:complexType name="cellType">
+        <xs:simpleContent>
+            <xs:extension base="xs:string">
+                <xs:attribute type="xs:byte" name="x" use="required"/>
+                <xs:attribute type="xs:byte" name="y" use="required"/>
+                <xs:attribute type="xs:string" name="N" use="required"/>
+                <xs:attribute type="xs:string" name="S" use="required"/>
+                <xs:attribute type="xs:string" name="E" use="required"/>
+                <xs:attribute type="xs:string" name="W" use="required"/>
+            </xs:extension>
+        </xs:simpleContent>
+    </xs:complexType>
+    <xs:complexType name="rowType">
+        <xs:sequence>
+            <xs:element type="cellType" name="cell" maxOccurs="unbounded" minOccurs="0"/>
+        </xs:sequence>
+        <xs:attribute type="xs:byte" name="id"/>
+    </xs:complexType>
+    <xs:complexType name="mazeType">
+        <xs:sequence>
+            <xs:element type="rowType" name="row" maxOccurs="unbounded" minOccurs="0"/>
+        </xs:sequence>
+        <xs:attribute type="xs:byte" name="width" use="required"/>
+        <xs:attribute type="xs:byte" name="height" use="required"/>
+        <xs:attribute type="xs:dateTime" name="timestamp"/>
+    </xs:complexType>
+</xs:schema>
