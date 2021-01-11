@@ -43,8 +43,8 @@ class Kruskal : MazeGenerator {
         println(edges.size)
     }
 
-    override fun generate(region: MazeRegion, maze: Maze): Maze {
-        with(region) {
+    override fun generate(mazeRegion: MazeRegion, maze: Maze): Maze {
+        with(mazeRegion) {
             // contains the coordinates of the cell and the direction to follow. The coordinates are
             // RELATIVE to the selection
             val edges: ArrayList<IntArray> = ArrayList(2 * width * height - width - height + 1)
@@ -67,7 +67,7 @@ class Kruskal : MazeGenerator {
                 val cellHash2 = y * width + x
 
                 if (set.union(cellHash1, cellHash2))
-                        carvePassage(x + region.x, y + region.y, direction, maze)
+                    carvePassage(x + mazeRegion.x, y + mazeRegion.y, direction, maze)
             }
         }
 
@@ -76,14 +76,14 @@ class Kruskal : MazeGenerator {
 
     class UnionFind(size: Int) {
 
-        val roots = IntArray(size) { it }
+        private val roots = IntArray(size) { it }
 
         fun find(u: Int): Int {
-            if (roots[u] != u) {
+            return if (roots[u] != u) {
                 val root = find(roots[u])
                 roots[u] = root
-                return root
-            } else return u
+                root
+            } else u
         }
 
         fun differ(u: Int, v: Int) = find(u) != find(v)
@@ -92,11 +92,11 @@ class Kruskal : MazeGenerator {
             val root1 = find(u)
             val root2 = find(v)
 
-            if (root1 != root2) {
+            return if (root1 != root2) {
                 roots[root2] = root1
 
-                return true
-            } else return false
+                true
+            } else false
         }
     }
 }

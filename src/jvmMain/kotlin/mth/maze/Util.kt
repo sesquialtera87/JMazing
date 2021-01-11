@@ -1,7 +1,6 @@
 package mth.maze
 
-import mth.maze.algo.HuntAndKill
-import mth.maze.algo.RecursiveDivision
+import mth.maze.algo.Prim
 import java.awt.*
 import java.awt.event.ActionEvent
 import javax.swing.*
@@ -78,12 +77,12 @@ fun main() {
     val w = 40
     val h = 40
     val maze = Maze(w, h, true)
-    val algo = RecursiveDivision()
+    val algo = Prim()
 //    algo.init(MazeRegion(0, 0, w, h), maze)
 //    algo.generate(MazeRegion(2,2, w-2,2), maze)
 //    Kruskal().generate(MazeRegion(2, 5, 16, 10), maze)
-    HuntAndKill().generate(MazeRegion(0, 0, w, h), maze)
+    algo.generate(MazeRegion(0, 0, w, h), maze)
 //    algo.init(maze)
 
-    maze.show(cellSize = 10, action = { algo.next() })
+    maze.show(cellSize = 10, action = { })
 }
