@@ -11,6 +11,9 @@ import java.util.*
 
 interface MazeGenerator {
 
+    val wallDestroyer: Boolean
+        get() = true
+
     val random: Random
         get() = Random()
 

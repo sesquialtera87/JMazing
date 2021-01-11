@@ -1,12 +1,13 @@
 package mth.maze.algo
 
-import mth.maze.*
+import mth.maze.Maze
+import mth.maze.MazeRegion
 
 class Sidewinder : MazeGenerator {
 
     var carveEastProbability = 0.5
 
-    fun randomChoiche(prob: Double) = random.nextDouble() <= prob
+    private fun randomChoice(prob: Double) = random.nextDouble() <= prob
 
     override fun generate(mazeRegion: MazeRegion, maze: Maze): Maze {
         with(mazeRegion) {
@@ -19,7 +20,7 @@ class Sidewinder : MazeGenerator {
                 corridorStart = 0
 
                 for (i in 0 until width) {
-                    if (i != width - 1 && randomChoiche(carveEastProbability)) {
+                    if (i != width - 1 && randomChoice(carveEastProbability)) {
                         carvePassage(i + x, j + y, Maze.EAST, maze)
                     } else {
                         // choose at random a cell in the corridor and open a passage
