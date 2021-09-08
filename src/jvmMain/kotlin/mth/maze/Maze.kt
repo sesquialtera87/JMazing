@@ -39,6 +39,8 @@ class Maze(nx: Int = 0, ny: Int = 0, allWalls: Boolean = false) {
      */
     fun cellAt(x: Int, y: Int) = grid[x][y]
 
+    fun getRegion() = MazeRegion(0, 0, width, height)
+
     /**
      * A property container of a maze cell. It consists of a [MutableMap] with [String]-[Any]
      * pairing couples.
