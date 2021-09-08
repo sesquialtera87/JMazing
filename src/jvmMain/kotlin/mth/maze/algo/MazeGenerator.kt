@@ -21,7 +21,7 @@ interface MazeGenerator {
 
 
     /**
-     * Opens a passage from the cell (x,y) to the cell specified by [direction]
+     * Open a passage from the cell (x,y) to the cell specified by [direction]
      */
     fun carvePassage(x: Int, y: Int, direction: Int, maze: Maze): Point {
         val destinationX = x + DX[direction]!!
