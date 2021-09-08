@@ -30,7 +30,7 @@ class BinaryTree(D1: Int = NORTH, D2: Int = WEST) : MazeGenerator {
                 for (y in 0 until height) {
                     rebuildWalls(maze, x, y, mazeRegion)
 
-                    val randomDirection = randomDirection()
+                    val randomDirection = randomizedDirection()
 
                     if (passageAllowed(x, y, width, height, randomDirection))
                         carvePassage(x + mazeRegion.x, y + mazeRegion.y, randomDirection, maze)
@@ -43,7 +43,7 @@ class BinaryTree(D1: Int = NORTH, D2: Int = WEST) : MazeGenerator {
 
     }
 
-    private fun randomDirection(): Int {
+    private fun randomizedDirection(): Int {
         val index = random.nextInt(2)
         return directions[index]
     }
