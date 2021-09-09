@@ -1,14 +1,16 @@
 package mth.maze.io
 
+import com.json_simple.JsonArray
+import com.json_simple.JsonKey
 import com.json_simple.JsonObject
 import mth.maze.Maze
 import mth.maze.algo.MazeGenerator
 import mth.maze.algo.Prim
-import mth.maze.show
 import org.xml.sax.ErrorHandler
 import org.xml.sax.SAXParseException
 import java.io.FileInputStream
 import java.io.FileOutputStream
+import java.io.FileWriter
 import javax.xml.XMLConstants
 import javax.xml.stream.XMLInputFactory
 import javax.xml.stream.XMLOutputFactory
@@ -19,6 +21,12 @@ import javax.xml.validation.SchemaFactory
 
 const val ATTR_WIDTH = "width"
 const val ATTR_HEIGHT = "height"
+const val TAG_MAZE = "maze"
+const val TAG_CELL = "cell"
+const val XML_SCHEMA = "maze_xml_schema.xsd"
+const val path = "/home/mattia/IdeaProjects/JMazing/src/jvmMain/kotlin/mth/maze/io/maze_test.xml"
+
+val wallMap = mapOf("north" to Maze.NORTH, "west" to Maze.WEST, "east" to Maze.EAST, "south" to Maze.SOUTH)
 
 class XMLWriter {
     fun write(maze: Maze, path: String, xmlVersion: String = "1.0") {
@@ -55,11 +63,6 @@ class XMLWriter {
     }
 }
 
-const val TAG_MAZE = "maze"
-const val TAG_CELL = "cell"
-const val XML_SCHEMA = "maze_xml_schema.xsd"
-const val path = "/home/mattia/IdeaProjects/JMazing/src/jvmMain/kotlin/mth/maze/io/maze_test.xml"
-
 fun validateXML(xmlStreamReader: XMLStreamReader? = null) {
     val reader = xmlStreamReader ?: XMLInputFactory.newInstance().createXMLStreamReader(FileInputStream(path))
 
@@ -78,7 +81,6 @@ fun readFromXML(path: String, errorHandler: ErrorHandler? = null): Maze {
     var x: Int
     var y: Int
 
-    val wallMap = mapOf("north" to Maze.NORTH, "west" to Maze.WEST, "east" to Maze.EAST, "south" to Maze.SOUTH)
 
     val reader = XMLInputFactory.newInstance().createXMLStreamReader(FileInputStream(path))
 
@@ -141,8 +143,41 @@ fun readFromXML(path: String, errorHandler: ErrorHandler? = null): Maze {
     return maze
 }
 
+enum class JsonKeys(override val key: String) : JsonKey {
+    CELLS("cells"),
+    MAZE_WIDTH("maze_width"),
+    MAZE_HEIGHT("maze_height"),
+    X("x"),
+    Y("y");
+
+    override val value: Any
+        get() = ""
+}
+
 fun Maze.toJSON(path: String) {
-    val mazeJSON = JsonObject()
+    val cells = JsonArray()
+    var walls: BooleanArray
+
+    for (i in 0 until width)
+        for (j in 0 until height) {
+            walls = cellAt(i, j).walls
+            val cell = JsonObject()
+            cell.put(JsonKeys.X, i)
+            cell.put(JsonKeys.Y, j)
+            wallMap.forEach { cell[it.key] = walls[it.value] }
+            cells.add(cell)
+        }
+
+    val mazeJSON = JsonObject().apply {
+        put(JsonKeys.MAZE_WIDTH, width)
+        put(JsonKeys.MAZE_HEIGHT, height)
+        put(JsonKeys.CELLS, cells)
+    }
+
+    FileWriter(path).apply {
+        write(mazeJSON.toJson())
+        flush()
+    }
 }
 
 fun main() {
@@ -164,6 +199,8 @@ fun main() {
 //    PreviewWindow(maze).showMaze()
 //    XMLWriter().write(maze, path)
 
-    validateXML()
-    readFromXML(path, errorHandler).show { }
+//    validateXML()
+//    readFromXML(path, errorHandler).show { }
+
+    maze.toJSON("$path.json")
 }
