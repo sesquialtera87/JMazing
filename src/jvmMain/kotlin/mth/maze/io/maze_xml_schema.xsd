@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema elementFormDefault="qualified"
+           xmlns:xs="http://www.w3.org/2001/XMLSchema">
+
+    <xs:element name="maze" type="mazeType"/>
+
+    <xs:complexType name="cellType">
+        <xs:simpleContent>
+            <xs:extension base="xs:string">
+                <xs:attribute type="xs:integer" name="x"/>
+                <xs:attribute type="xs:integer" name="y"/>
+
+                <xs:attribute type="xs:boolean" name="north" default="true"/>
+                <xs:attribute type="xs:boolean" name="south" default="true"/>
+                <xs:attribute type="xs:boolean" name="east" default="true"/>
+                <xs:attribute type="xs:boolean" name="west" default="true"/>
+            </xs:extension>
+        </xs:simpleContent>
+    </xs:complexType>
+
+    <xs:complexType name="mazeType">
+        <xs:sequence>
+            <xs:element type="cellType" name="cell" maxOccurs="unbounded" minOccurs="0"/>
+        </xs:sequence>
+        <xs:attribute type="xs:float" name="version"/>
+        <xs:attribute type="xs:integer" name="width"/>
+        <xs:attribute type="xs:integer" name="height"/>
+    </xs:complexType>
+</xs:schema>
