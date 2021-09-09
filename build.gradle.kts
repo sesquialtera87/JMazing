@@ -7,7 +7,11 @@ version = "1.0-SNAPSHOT"
 
 repositories {
     mavenCentral()
+    flatDir {
+        dir("/home/mattia/IdeaProjects/json-simple/out/artifacts/json_simple_jar")
+    }
 }
+
 
 kotlin {
     jvm {
@@ -26,7 +30,11 @@ kotlin {
                 implementation(kotlin("test-annotations-common"))
             }
         }
-        val jvmMain by getting
+        val jvmMain by getting {
+            dependencies {
+                implementation(":json-simple")
+            }
+        }
         val jvmTest by getting {
             dependencies {
                 implementation(kotlin("test-junit"))
